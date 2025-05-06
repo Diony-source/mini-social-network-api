@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"mini-social-network-api/internal/middleware"
+	"mini-social-network-api/pkg/sanitize"
 )
 
 type Handler struct {
@@ -21,6 +22,8 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid input", http.StatusBadRequest)
 		return
 	}
+
+	input.Content = sanitize.Sanitize(input.Content)
 
 	userIDValue := r.Context().Value(middleware.ContextUserIDKey)
 	userID, ok := userIDValue.(int64)

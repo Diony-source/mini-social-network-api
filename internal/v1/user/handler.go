@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"mini-social-network-api/pkg/sanitize"
 	"net/http"
 )
 
@@ -19,6 +20,9 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid input", http.StatusBadRequest)
 		return
 	}
+
+	input.Username = sanitize.Sanitize(input.Username)
+	input.Email = sanitize.Sanitize(input.Email)
 
 	if err := h.svc.Register(input); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
