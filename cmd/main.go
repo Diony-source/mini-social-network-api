@@ -11,7 +11,7 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
-	database := db.ConnectPostgres(cfg.DBSource)
+	database := db.ConnectPostgres(cfg)
 	router := apphttp.NewRouter(cfg, database)
 
 	log.Printf("🚀 Server running on port %s", cfg.Port)
