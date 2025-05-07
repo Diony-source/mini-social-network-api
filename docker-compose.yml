@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15
+    container_name: pgdb
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:5432"
+
+  api:
+    build: .
+    container_name: mini-social-network-api
+    depends_on:
+      - db
+    restart: on-failure
+    ports:
+      - "${PORT}:${PORT}"
+    env_file:
+      - .env
+
+  migrate:
+    image: postgres:15
+    depends_on:
+      - db
+    volumes:
+      - ./db/migrations:/migrations
+    entrypoint: >
+      bash -c "
+      sleep 5 &&
+      for f in /migrations/*.sql; do
+        echo Running $$f;
+        psql -U ${DB_USER} -h ${DB_HOST} -d ${DB_NAME} -f $$f;
+      done
+      "
+    env_file:
+      - .env
+    environment:
+      PGPASSWORD: ${DB_PASSWORD}
+
+
+volumes:
+  postgres_data:
