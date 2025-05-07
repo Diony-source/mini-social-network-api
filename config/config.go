@@ -8,20 +8,34 @@ import (
 )
 
 type Config struct {
-	DBSource  string
-	Port      string
-	JWTSecret string
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPassword string
+	DBName     string
+	Port       string
+	JWTSecret  string
 }
 
 func LoadConfig() *Config {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println(".env not loaded, using system env")
+	if os.Getenv("APP_ENV") != "production" {
+		_ = godotenv.Load()
 	}
 
-	return &Config{
-		DBSource:  os.Getenv("DB_SOURCE"),
-		Port:      os.Getenv("PORT"),
-		JWTSecret: os.Getenv("JWT_SECRET"),
-	}	
+	cfg := &Config{
+		DBHost:     os.Getenv("DB_HOST"),
+		DBPort:     os.Getenv("DB_PORT"),
+		DBUser:     os.Getenv("DB_USER"),
+		DBPassword: os.Getenv("DB_PASSWORD"),
+		DBName:     os.Getenv("DB_NAME"),
+		Port:       os.Getenv("PORT"),
+		JWTSecret:  os.Getenv("JWT_SECRET"),
+	}
+
+	if cfg.DBHost == "" || cfg.DBUser == "" || cfg.DBPassword == "" ||
+		cfg.DBName == "" || cfg.Port == "" || cfg.JWTSecret == "" {
+		log.Fatal("❌ Missing required environment variables")
+	}
+
+	return cfg
 }
