@@ -1,8 +1,7 @@
-
 # Mini Social Network API 🧑‍🤝‍🧑
 
 A clean, modular backend API for a mini social network.  
-Designed with extensibility and production practices in mind.  
+Designed with extensibility, security, and production practices in mind.  
 This project was built during my Go backend learning journey and reflects both beginner-level practice and senior-level architecture.
 
 ---
@@ -12,8 +11,10 @@ This project was built during my Go backend learning journey and reflects both b
 - User registration and login (JWT authentication)
 - Post creation by authenticated users
 - Follow system between users
+- Request sanitization to prevent injection attacks
 - Versioned API (`/v1/`)
 - PostgreSQL with raw SQL migrations
+- Dockerized setup with Compose support
 - Clean architecture with modular design
 - Postman collection for API testing
 
@@ -23,9 +24,11 @@ This project was built during my Go backend learning journey and reflects both b
 
 - Go 1.21+
 - PostgreSQL
+- Docker & Docker Compose
 - Chi Router
 - JWT + Middleware
 - Godotenv (.env support)
+- Custom sanitize input module
 
 ---
 
@@ -43,7 +46,12 @@ This project was built during my Go backend learning journey and reflects both b
 │       ├── user/
 │       ├── post/
 │       └── follow/
-├── pkg/                    # Shared utils (auth, db)
+├── pkg/
+│   ├── auth/               # JWT & Password utils
+│   ├── db/                 # Postgres connector
+│   └── sanitize/           # Input sanitizer for safety
+├── Dockerfile
+├── docker-compose.yml
 ├── .env.example
 └── README.md
 ```
@@ -62,24 +70,27 @@ cd mini-social-network-api
 ### 2. Create and configure `.env`
 
 ```env
-DB_SOURCE=postgres://postgres:yourpassword@localhost:5432/mini_social_network_api?sslmode=disable
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=yourpassword
+DB_NAME=mini_social_network_api
 PORT=8080
-JWT_SECRET=your_secret_key
+JWT_SECRET=your_super_secret_key
 ```
 
-### 3. Run database migrations
+> **Note:** Use `.env.example` as a template.
+
+### 3. Run with Docker 🐳
 
 ```bash
-psql -U postgres -d mini_social_network_api -f db/migrations/000001_create_users.sql
-psql -U postgres -d mini_social_network_api -f db/migrations/000002_create_posts.sql
-psql -U postgres -d mini_social_network_api -f db/migrations/000003_create_follows.sql
+docker-compose up --build
 ```
 
-### 4. Start the server
-
-```bash
-go run cmd/main.go
-```
+> This will:
+> - Spin up PostgreSQL
+> - Run migrations
+> - Launch the Go API
 
 Server runs at `http://localhost:8080`
 
@@ -106,18 +117,26 @@ All routes are prefixed with `/v1`
 1. Import the collection in Postman  
 2. Create an environment with:
    - `base_url` = `http://localhost:8080`
-   - `jwt_token` = *(leave blank — auto set after login)*
+   - `jwt_token` = *(auto set after login)*
+
+---
+
+## 🧼 Input Sanitization
+
+To protect against XSS or injection:
+- All user inputs are sanitized via `pkg/sanitize`
+- Applied on handlers for registration, login, posts, and follows
 
 ---
 
 ## 🤝 Contribution
 
-This project is a part of my backend learning roadmap.  
-Future plans:
+This project is a part of my backend development growth.  
+Upcoming improvements:
 - Swagger documentation
-- Docker support
 - Redis caching
 - Full test coverage
+- CI/CD pipeline
 
 ---
 
