@@ -16,6 +16,7 @@ import (
 
 func NewRouter(cfg *config.Config, db *sql.DB) http.Handler {
 	r := chi.NewRouter()
+	r.Use(middleware.RequestLoggerMiddleware)
 
 	// Dependency injection
 	userRepo := v1user.NewRepository(db)
