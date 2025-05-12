@@ -2,18 +2,27 @@ package post
 
 import (
 	"database/sql"
+	"mini-social-network-api/pkg/logger"
 )
 
 type Repository struct {
-	DB *sql.DB
+	db *sql.DB
 }
 
 func NewRepository(db *sql.DB) *Repository {
-	return &Repository{DB: db}
+	return &Repository{db: db}
 }
 
-func (r *Repository) CreatePost(authorID int64, content string) error {
+func (r *Repository) CreatePost(userID int64, content string) error {
 	query := `INSERT INTO posts (author_id, content) VALUES ($1, $2)`
-	_, err := r.DB.Exec(query, authorID, content)
-	return err
+
+	if _, err := r.db.Exec(query, userID, content); err != nil {
+		logger.Log.WithError(err).WithFields(map[string]interface{}{
+			"user_id": userID,
+			"query":   "insert post",
+		}).Error("failed to execute post insert query")
+		return err
+	}
+
+	return nil
 }
