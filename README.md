@@ -1,58 +1,57 @@
 # Mini Social Network API 🧑‍🤝‍🧑
 
 A clean, modular backend API for a mini social network.  
-Designed with extensibility, security, and production practices in mind.  
-This project was built during my Go backend learning journey and reflects both beginner-level practice and senior-level architecture.
+Built with scalability, security, and observability in mind using Go, PostgreSQL, Logrus logging, and Docker.
 
 ---
 
 ## 🚀 Features
 
-- User registration and login (JWT authentication)
-- Post creation by authenticated users
-- Follow system between users
-- Request sanitization to prevent injection attacks
-- Versioned API (`/v1/`)
+- User registration and login (JWT-based)
+- Authenticated post creation
+- Follow/unfollow user functionality
 - PostgreSQL with raw SQL migrations
-- Dockerized setup with Compose support
-- Clean architecture with modular design
-- Postman collection for API testing
+- Input sanitization against XSS (custom `sanitize` package)
+- Centralized structured logging with Logrus
+- Versioned API (`/v1/`)
+- Fully Dockerized development environment
+- Postman collection included
 
 ---
 
-## 🛠️ Tech Stack
+## 🧱 Tech Stack
 
-- Go 1.21+
-- PostgreSQL
-- Docker & Docker Compose
-- Chi Router
-- JWT + Middleware
-- Godotenv (.env support)
-- Custom sanitize input module
+- **Go** 1.21+
+- **PostgreSQL** 15
+- **Chi Router** (for routing)
+- **JWT** for authentication
+- **Logrus** for logging
+- **Docker + Docker Compose**
+- **godotenv** for environment management
 
 ---
 
-## 📂 Project Structure
+## 📁 Project Structure
 
 ```
 .
-├── cmd/                    # Entry point: main.go
-├── config/                 # Loads .env
-├── db/                     # SQL migrations
+├── cmd/                    # Entry point
+├── config/                 # Loads .env into Config struct
+├── db/migrations/          # SQL migration files
 ├── internal/
-│   ├── http/               # Router and dependencies
-│   ├── middleware/         # JWT Auth middleware
-│   └── v1/                 # Versioned domains
-│       ├── user/
-│       ├── post/
-│       └── follow/
+│   ├── http/               # Router & middleware
+│   └── v1/                 # Versioned business logic
+│       ├── user/           # Register/Login
+│       ├── post/           # Create Post
+│       └── follow/         # Follow user
 ├── pkg/
-│   ├── auth/               # JWT & Password utils
-│   ├── db/                 # Postgres connector
-│   └── sanitize/           # Input sanitizer for safety
+│   ├── auth/               # JWT & password helpers
+│   ├── db/                 # PostgreSQL connector
+│   ├── logger/             # Logrus setup
+│   └── sanitize/           # Input sanitizer
+├── .env.example
 ├── Dockerfile
 ├── docker-compose.yml
-├── .env.example
 └── README.md
 ```
 
@@ -60,83 +59,74 @@ This project was built during my Go backend learning journey and reflects both b
 
 ## ⚙️ Setup
 
-### 1. Clone the repo
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/yourusername/mini-social-network-api.git
 cd mini-social-network-api
 ```
 
-### 2. Create and configure `.env`
+### 2. Configure environment
 
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=yourpassword
-DB_NAME=mini_social_network_api
-PORT=8080
-JWT_SECRET=your_super_secret_key
+Copy the sample and fill in your values:
+
+```bash
+cp .env.example .env
 ```
 
-> **Note:** Use `.env.example` as a template.
-
-### 3. Run with Docker 🐳
+### 3. Build & Run (Docker)
 
 ```bash
 docker-compose up --build
 ```
 
-> This will:
-> - Spin up PostgreSQL
-> - Run migrations
-> - Launch the Go API
-
-Server runs at `http://localhost:8080`
+App: [http://localhost:8080](http://localhost:8080)
 
 ---
 
-## 🔎 API Endpoints
+## 🧪 API Endpoints
 
-All routes are prefixed with `/v1`
-
-| Method | Path        | Description               | Auth Required |
-|--------|-------------|---------------------------|----------------|
-| POST   | /register   | Register new user         | ❌
-| POST   | /login      | Login and get JWT         | ❌
-| GET    | /profile    | View your profile         | ✅
-| POST   | /posts      | Create a new post         | ✅
-| POST   | /follow     | Follow another user       | ✅
+| Method | Path        | Description            | Auth Required |
+|--------|-------------|------------------------|---------------|
+| POST   | /v1/register | Register user          | ❌
+| POST   | /v1/login    | Login + get token      | ❌
+| GET    | /v1/profile  | Auth user profile      | ✅
+| POST   | /v1/posts    | Create post            | ✅
+| POST   | /v1/follow   | Follow another user    | ✅
 
 ---
 
-## 📫 API Testing
+## 🔍 API Testing (Postman)
 
-📦 Postman collection: `mini-social-network-api.postman_collection.json`
-
-1. Import the collection in Postman  
-2. Create an environment with:
-   - `base_url` = `http://localhost:8080`
-   - `jwt_token` = *(auto set after login)*
+1. Import `mini-social-network-api.postman_collection.json`
+2. Set environment:
+   - `base_url` = http://localhost:8080
+   - `jwt_token` = *(auto-filled on login)*
 
 ---
 
 ## 🧼 Input Sanitization
 
-To protect against XSS or injection:
-- All user inputs are sanitized via `pkg/sanitize`
-- Applied on handlers for registration, login, posts, and follows
+All user input (username, email, content) is passed through the custom `sanitize` package to prevent script injections.
 
 ---
 
-## 🤝 Contribution
+## 📜 Logging
 
-This project is a part of my backend development growth.  
-Upcoming improvements:
-- Swagger documentation
-- Redis caching
-- Full test coverage
-- CI/CD pipeline
+All handlers and services use [Logrus](https://github.com/sirupsen/logrus) for structured, context-aware logs.
+
+Logs include:
+- Request inputs
+- Errors from decoding, validation, DB
+- Successful actions
+
+---
+
+## 🐳 Dockerized
+
+- Multistage Dockerfile (builder + minimal alpine)
+- PostgreSQL & API services via Docker Compose
+- Volumes for persistent db storage
 
 ---
 
