@@ -11,4 +11,6 @@ type CreatePostRequest struct {
 	Content string `json:"content" validate:"required,min=1"`
 }
 
-
+type UpdatePostRequest struct {
+	Content string `json:"content"`
+}
