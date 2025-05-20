@@ -10,7 +10,10 @@ import (
 
 type contextKey string
 
-const ContextUserIDKey = contextKey("user_id")
+const (
+	ContextUserIDKey   = contextKey("user_id")
+	ContextUserRoleKey = contextKey("user_role")
+)
 
 func JWTAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -21,13 +24,34 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		tokenStr := strings.TrimPrefix(header, "Bearer ")
-		userID, err := auth.ParseToken(tokenStr)
+		userID, userRole, err := auth.ParseToken(tokenStr)
 		if err != nil {
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
 		}
 
 		ctx := context.WithValue(r.Context(), ContextUserIDKey, userID)
+		ctx = context.WithValue(ctx, ContextUserRoleKey, userRole)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func RoleMiddleware(allowedRoles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			role, ok := r.Context().Value(ContextUserRoleKey).(string)
+			if !ok {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			for _, allowed := range allowedRoles {
+				if role == allowed {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+			http.Error(w, "forbidden", http.StatusForbidden)
+		})
+	}
 }

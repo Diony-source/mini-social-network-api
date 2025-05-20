@@ -10,9 +10,10 @@ import (
 
 var jwtKey = []byte(os.Getenv("JWT_SECRET"))
 
-func GenerateToken(userID int64) (string, error) {
+func GenerateToken(userID int64, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
+		"role":    role,
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	}
 
@@ -20,7 +21,7 @@ func GenerateToken(userID int64) (string, error) {
 	return token.SignedString(jwtKey)
 }
 
-func ParseToken(tokenStr string) (int64, error) {
+func ParseToken(tokenStr string) (int64, string, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
@@ -29,18 +30,23 @@ func ParseToken(tokenStr string) (int64, error) {
 	})
 
 	if err != nil || !token.Valid {
-		return 0, errors.New("invalid token")
+		return 0, "", errors.New("invalid token")
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return 0, errors.New("invalid claims")
+		return 0, "", errors.New("invalid claims")
 	}
 
 	userIDFloat, ok := claims["user_id"].(float64)
 	if !ok {
-		return 0, errors.New("invalid user_id in token")
+		return 0, "", errors.New("invalid user_id in token")
 	}
 
-	return int64(userIDFloat), nil
+	roleStr, ok := claims["role"].(string)
+	if !ok {
+		return 0, "", errors.New("invalid role in token")
+	}
+
+	return int64(userIDFloat), roleStr, nil
 }
