@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -18,7 +17,6 @@ func NewRouter(cfg *config.Config, db *sql.DB) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestLoggerMiddleware)
 
-	// Dependency injection
 	userRepo := v1user.NewRepository(db)
 	userSvc := v1user.NewService(userRepo)
 	userHandler := v1user.NewHandler(userSvc)
@@ -31,32 +29,27 @@ func NewRouter(cfg *config.Config, db *sql.DB) http.Handler {
 	followSvc := v1follow.NewService(followRepo)
 	followHandler := v1follow.NewHandler(followSvc)
 
-	// Base health route
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
 
-	// Versioned API
-	r.Route("/v1", func(r chi.Router) {
-		// Public
+	// User routes
+	r.Route("/v1/users", func(r chi.Router) {
 		r.Post("/register", userHandler.Register)
 		r.Post("/login", userHandler.Login)
+	})
 
-		// Protected
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.JWTAuthMiddleware)
+	// Post routes
+	r.Route("/v1/posts", func(r chi.Router) {
+		r.Use(middleware.JWTAuthMiddleware)
+		r.Post("/", postHandler.CreatePost)
+		r.Put("/{id:[0-9]+}", postHandler.UpdatePost)
+	})
 
-			r.Get("/profile", func(w http.ResponseWriter, r *http.Request) {
-				userID := r.Context().Value(middleware.ContextUserIDKey).(int64)
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(map[string]interface{}{
-					"user_id": userID,
-				})
-			})
-
-			r.Post("/posts", postHandler.CreatePost)
-			r.Post("/follow", followHandler.Follow)
-		})
+	// Follow routes
+	r.Route("/v1/follows", func(r chi.Router) {
+		r.Use(middleware.JWTAuthMiddleware)
+		r.Post("/", followHandler.Follow)
 	})
 
 	return r
