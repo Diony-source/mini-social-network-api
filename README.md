@@ -1,3 +1,4 @@
+
 # Mini Social Network API 🧑‍🤝‍🧑
 
 A clean, modular backend API for a mini social network.  
@@ -8,7 +9,9 @@ Built with scalability, security, and observability in mind using Go, PostgreSQL
 ## 🚀 Features
 
 - User registration and login (JWT-based)
+- Role-based authorization: `user`, `moderator`, `admin`
 - Authenticated post creation
+- Post update restricted to owner or admin
 - Follow/unfollow user functionality
 - PostgreSQL with raw SQL migrations
 - Input sanitization against XSS (custom `sanitize` package)
