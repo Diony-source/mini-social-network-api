@@ -50,7 +50,7 @@ func (s *Service) Login(input LoginRequest) (*User, string, error) {
 		return nil, "", errors.New("invalid credentials")
 	}
 
-	token, err := auth.GenerateToken(user.ID)
+	token, err := auth.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		logger.Log.WithError(err).Error("token generation failed")
 		return nil, "", err
