@@ -43,7 +43,8 @@ func NewRouter(cfg *config.Config, db *sql.DB) http.Handler {
 	r.Route("/v1/posts", func(r chi.Router) {
 		r.Use(middleware.JWTAuthMiddleware)
 		r.Post("/", postHandler.CreatePost)
-		r.Put("/{id:[0-9]+}", postHandler.UpdatePost)
+		r.Put("/{id}", postHandler.UpdatePost)
+		r.Delete("/{id}", postHandler.DeletePost)
 	})
 
 	// Follow routes

@@ -52,3 +52,15 @@ func (s *Service) GetByID(postID int64) (*Post, error) {
 	logger.Log.WithField("post_id", postID).Info("post retrieved successfully")
 	return post, nil
 }
+
+func (s *Service) DeletePost(postID int64) error {
+	logger.Log.WithField("post_id", postID).Info("attempting to delete post")
+
+	if err := s.repo.Delete(postID); err != nil {
+		logger.Log.WithError(err).Error("failed to delete post from repository")
+		return err
+	}
+
+	logger.Log.WithField("post_id", postID).Info("post deleted successfully")
+	return nil
+}

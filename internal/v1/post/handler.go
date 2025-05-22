@@ -92,6 +92,7 @@ func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	input.Content = sanitize.Sanitize(input.Content)
 	post.Content = input.Content
 	if err := h.svc.UpdatePost(input, postID); err != nil {
 		logger.Log.WithError(err).Error("failed to update post")
@@ -101,4 +102,42 @@ func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(post)
+}
+
+func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
+	postIDStr := chi.URLParam(r, "id")
+	logger.Log.WithField("path_param_id", postIDStr).Info("delete post request received")
+
+	postID, err := strconv.ParseInt(postIDStr, 10, 64)
+	if err != nil {
+		logger.Log.WithError(err).Error("invalid post ID")
+		http.Error(w, "invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+	userID := ctx.Value(middleware.ContextUserIDKey).(int64)
+	role := ctx.Value(middleware.ContextUserRoleKey).(string)
+
+	post, err := h.svc.GetByID(postID)
+	if err != nil {
+		logger.Log.WithError(err).Error("failed to get post")
+		http.Error(w, "post not found", http.StatusNotFound)
+		return
+	}
+
+	if post.AuthorID != userID && role != "admin" {
+		logger.Log.Error("user not authorized to delete post")
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	if err := h.svc.DeletePost(postID); err != nil {
+		logger.Log.WithError(err).Error("failed to delete post")
+		http.Error(w, "failed to delete post", http.StatusInternalServerError)
+		return
+	}
+
+	logger.Log.WithField("post_id", postID).Info("post deleted successfully")
+	w.WriteHeader(http.StatusNoContent)
 }

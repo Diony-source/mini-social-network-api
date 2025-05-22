@@ -50,3 +50,14 @@ func (r *Repository) Update(postID int64, content string) error {
 	}
 	return err
 }
+
+func (r *Repository) Delete(postID int64) error {
+	query := `DELETE FROM posts WHERE id = $1`
+	_, err := r.db.Exec(query, postID)
+	if err != nil {
+		logger.Log.WithError(err).WithField("post_id", postID).Error("failed to execute post delete query")
+		return err
+	}
+	logger.Log.WithField("post_id", postID).Info("post successfully deleted from DB")
+	return nil
+}
