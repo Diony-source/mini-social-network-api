@@ -8,10 +8,12 @@ import (
 	apphttp "mini-social-network-api/internal/http"
 	"mini-social-network-api/pkg/db"
 	"mini-social-network-api/pkg/logger"
+	"mini-social-network-api/pkg/validate"
 )
 
 func main() {
 	logger.InitLogger()
+	validate.Init()
 
 	cfg := config.LoadConfig()
 	database := db.ConnectPostgres(cfg)
