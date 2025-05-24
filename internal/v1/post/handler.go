@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"mini-social-network-api/internal/httphelper"
 	"mini-social-network-api/internal/middleware"
 	"mini-social-network-api/pkg/logger"
 	"mini-social-network-api/pkg/sanitize"
@@ -26,13 +27,13 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	var input CreatePostRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		logger.Log.WithError(err).Error("invalid create post input")
-		http.Error(w, "invalid input", http.StatusBadRequest)
+		httphelper.WriteErrorResponse(w, http.StatusBadRequest, "invalid input")
 		return
 	}
 
 	if err := validate.Validator.Struct(input); err != nil {
 		logger.Log.WithError(err).Error("validation failed for create post input")
-		http.Error(w, "validation failed", http.StatusBadRequest)
+		httphelper.WriteErrorResponse(w, http.StatusBadRequest, "validation failed")
 		return
 	}
 
@@ -50,12 +51,12 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.svc.CreatePost(input, userID); err != nil {
 		logger.Log.WithError(err).Error("create post service failed")
-		http.Error(w, "could not create post", http.StatusInternalServerError)
+		httphelper.WriteErrorResponse(w, http.StatusInternalServerError, "could not create post")
 		return
 	}
 
 	logger.Log.WithField("content", input.Content).Info("post created successfully")
-	w.WriteHeader(http.StatusCreated)
+	httphelper.WriteJSONResponse(w, http.StatusCreated, map[string]string{"status": "created"})
 }
 
 func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +72,7 @@ func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	postID, err := strconv.ParseInt(postIDStr, 10, 64)
 	if err != nil {
 		logger.Log.WithError(err).Error("invalid post ID")
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
+		httphelper.WriteErrorResponse(w, http.StatusBadRequest, "invalid post ID")
 		return
 	}
 
@@ -95,13 +96,13 @@ func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	var input UpdatePostRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		logger.Log.WithError(err).Error("invalid update post input")
-		http.Error(w, "invalid input", http.StatusBadRequest)
+		httphelper.WriteErrorResponse(w, http.StatusBadRequest, "invalid input")
 		return
 	}
 
 	if err := validate.Validator.Struct(input); err != nil {
 		logger.Log.WithError(err).Error("validation failed for update post input")
-		http.Error(w, "validation failed", http.StatusBadRequest)
+		httphelper.WriteErrorResponse(w, http.StatusBadRequest, "validation failed")
 		return
 	}
 
@@ -109,11 +110,11 @@ func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	post.Content = input.Content
 	if err := h.svc.UpdatePost(input, postID); err != nil {
 		logger.Log.WithError(err).Error("failed to update post")
-		http.Error(w, "failed to update post", http.StatusInternalServerError)
+		httphelper.WriteErrorResponse(w, http.StatusInternalServerError, "update failed")
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	httphelper.WriteJSONResponse(w, http.StatusOK, post)
 	json.NewEncoder(w).Encode(post)
 }
 
@@ -124,7 +125,7 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	postID, err := strconv.ParseInt(postIDStr, 10, 64)
 	if err != nil {
 		logger.Log.WithError(err).Error("invalid post ID")
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
+		httphelper.WriteErrorResponse(w, http.StatusBadRequest, "invalid post ID")
 		return
 	}
 
@@ -147,10 +148,10 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.svc.DeletePost(postID); err != nil {
 		logger.Log.WithError(err).Error("failed to delete post")
-		http.Error(w, "failed to delete post", http.StatusInternalServerError)
+		httphelper.WriteErrorResponse(w, http.StatusInternalServerError, "delete failed")
 		return
 	}
 
 	logger.Log.WithField("post_id", postID).Info("post deleted successfully")
-	w.WriteHeader(http.StatusNoContent)
+	httphelper.WriteJSONResponse(w, http.StatusNoContent, nil)
 }
