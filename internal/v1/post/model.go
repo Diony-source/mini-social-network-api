@@ -8,9 +8,9 @@ type Post struct {
 }
 
 type CreatePostRequest struct {
-	Content string `json:"content" validate:"required,min=1"`
+	Content string `json:"content" validate:"omitempty"`
 }
 
 type UpdatePostRequest struct {
-	Content string `json:"content"`
+	Content string `json:"content" validate:"omitempty"`
 }
