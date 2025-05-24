@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"mini-social-network-api/internal/httphelper"
 	"mini-social-network-api/pkg/logger"
 	"mini-social-network-api/pkg/sanitize"
 	"mini-social-network-api/pkg/validate"
@@ -20,13 +21,13 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	var input RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		logger.Log.WithError(err).Error("invalid register input")
-		http.Error(w, "invalid input", http.StatusBadRequest)
+		httphelper.WriteErrorResponse(w, http.StatusBadRequest, "invalid input")
 		return
 	}
 
 	if err := validate.Validator.Struct(input); err != nil {
 		logger.Log.WithError(err).Error("validation failed for register input")
-		http.Error(w, "validate failed", http.StatusBadRequest)
+		httphelper.WriteErrorResponse(w, http.StatusBadRequest, "validation failed")
 		return
 	}
 
@@ -37,7 +38,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.svc.Register(input); err != nil {
 		logger.Log.WithError(err).Error("register service failed")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httphelper.WriteErrorResponse(w, http.StatusInternalServerError, "register failed")
 		return
 	}
 
@@ -50,13 +51,13 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		logger.Log.WithError(err).Error("invalid login input")
-		http.Error(w, "invalid input", http.StatusBadRequest)
+		httphelper.WriteErrorResponse(w, http.StatusBadRequest, "invalid input")
 		return
 	}
 
 	if err := validate.Validator.Struct(input); err != nil {
 		logger.Log.WithError(err).Error("validation failed for login input")
-		http.Error(w, "validate failed", http.StatusBadRequest)
+		httphelper.WriteErrorResponse(w, http.StatusBadRequest, "validation failed")
 		return
 	}
 
@@ -65,7 +66,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	user, token, err := h.svc.Login(input)
 	if err != nil {
 		logger.Log.WithError(err).Error("unauthrorized login attempt")
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		httphelper.WriteErrorResponse(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
