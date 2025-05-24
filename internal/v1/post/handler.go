@@ -8,6 +8,7 @@ import (
 	"mini-social-network-api/internal/middleware"
 	"mini-social-network-api/pkg/logger"
 	"mini-social-network-api/pkg/sanitize"
+	"mini-social-network-api/pkg/validate"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sirupsen/logrus"
@@ -26,6 +27,12 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		logger.Log.WithError(err).Error("invalid create post input")
 		http.Error(w, "invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if err := validate.Validator.Struct(input); err != nil {
+		logger.Log.WithError(err).Error("validation failed for create post input")
+		http.Error(w, "validation failed", http.StatusBadRequest)
 		return
 	}
 
@@ -89,6 +96,12 @@ func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		logger.Log.WithError(err).Error("invalid update post input")
 		http.Error(w, "invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if err := validate.Validator.Struct(input); err != nil {
+		logger.Log.WithError(err).Error("validation failed for update post input")
+		http.Error(w, "validation failed", http.StatusBadRequest)
 		return
 	}
 
