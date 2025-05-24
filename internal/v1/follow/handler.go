@@ -6,6 +6,7 @@ import (
 
 	"mini-social-network-api/internal/middleware"
 	"mini-social-network-api/pkg/logger"
+	"mini-social-network-api/pkg/validate"
 )
 
 type Handler struct {
@@ -21,6 +22,12 @@ func (h *Handler) Follow(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		logger.Log.WithError(err).Error("invalid follow input")
 		http.Error(w, "invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if err := validate.Validator.Struct(input); err != nil {
+		logger.Log.WithError(err).Error("validation failed for follow input")
+		http.Error(w, "validation failed", http.StatusBadRequest)
 		return
 	}
 
